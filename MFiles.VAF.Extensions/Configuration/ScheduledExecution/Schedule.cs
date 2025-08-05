@@ -106,11 +106,12 @@ namespace MFiles.VAF.Extensions.ScheduledExecution
 			}
 
 			// Get the next execution date from the triggers.
-			return this.Triggers?
+			var next = this.Triggers?
 				.Select(t => t.GetNextExecution(after, timeZoneInfo))
 				.Where(d => d.HasValue)
-				.OrderBy(d => d)
-				.FirstOrDefault();
+				.Where(d => d.Value.DateTime != DateTime.MinValue)
+				.OrderBy(d => d);
+			return next.Any() ? next.First() : null;
 		}
 
 
