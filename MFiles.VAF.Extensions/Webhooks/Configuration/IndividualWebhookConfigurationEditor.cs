@@ -10,13 +10,13 @@ using MFiles.VAF.Configuration.Logging;
 
 namespace MFiles.VAF.Extensions.Webhooks.Configuration
 {
-	[ObjectMembers(typeof(WebhookConfigurationEditor))]
-	public class WebhookConfigurationEditor
+	[ObjectMembers(typeof(IndividualWebhookConfigurationEditor))]
+	public class IndividualWebhookConfigurationEditor
 		: Dictionary<string, object>, IObjectEditorMembersProvider
 	{
-		private ILogger Logger { get; } = LogManager.GetLogger<WebhookConfigurationEditor>();
-		public static WebhookConfigurationEditor Instance { get; }
-			= new WebhookConfigurationEditor();
+		private ILogger Logger { get; } = LogManager.GetLogger<IndividualWebhookConfigurationEditor>();
+		public static IndividualWebhookConfigurationEditor Instance { get; }
+			= new IndividualWebhookConfigurationEditor();
 		public IEnumerable<ObjectEditorMember> GetMembers
 		(
 			Type memberType,

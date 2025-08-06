@@ -173,9 +173,9 @@ namespace MFiles.VAF.Extensions
 				{
 					// Get the members (configurable properties) for this type.
 					var members = ((IDictionary<string, object>)configurationElement["members"]);
-					if(!(members == default) && members.ContainsKey(nameof(ConfigurationBase.WebhookConfiguration)))
+					if(!(members == default) && members.ContainsKey(nameof(ConfigurationBase.IndividualWebhookConfiguration)))
 					{
-						var webhookConfigurationMember = members[nameof(ConfigurationBase.WebhookConfiguration)] as IDictionary<string, object>;
+						var webhookConfigurationMember = members[nameof(ConfigurationBase.IndividualWebhookConfiguration)] as IDictionary<string, object>;
 
 						// Update the editor type name so that it's unique...
 						var typeName = (webhookConfigurationMember != null && webhookConfigurationMember.ContainsKey("type")) ? webhookConfigurationMember["type"].ToString() : (string)null;
@@ -196,9 +196,9 @@ namespace MFiles.VAF.Extensions
 						}
 
 						// If there are no webhooks then remove the webhook config member entirely.
-						if (!WebhookConfigurationEditor.Instance.Any())
+						if (!IndividualWebhookConfigurationEditor.Instance.Any())
 						{
-							members.Remove(nameof(ConfigurationBase.WebhookConfiguration));
+							members.Remove(nameof(ConfigurationBase.IndividualWebhookConfiguration));
 						}
 					}
 

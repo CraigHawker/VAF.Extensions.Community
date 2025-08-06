@@ -11,6 +11,17 @@ using System.Threading.Tasks;
 
 namespace MFiles.VAF.Extensions.Configuration
 {
+	/// <summary>
+	/// The type of webhook configuration needed.
+	/// </summary>
+	public enum WebhookConfigurationType
+	{
+		[JsonConfEditor(Label = "Common", HelpText = "All web hooks use the same configuration")]
+		Common = 0,
+
+		[JsonConfEditor(Label = "Individual", HelpText = "Web hooks are configured individually")]
+		Individual = 1
+	}
 
 	/// <summary>
 	/// A base class for configuration that implements <see cref="IConfigurationWithLoggingConfiguration"/>.
@@ -26,8 +37,30 @@ namespace MFiles.VAF.Extensions.Configuration
 
 		[DataMember]
 		[Security(ChangeBy = SecurityAttribute.UserLevel.VaultAdmin, ViewBy = SecurityAttribute.UserLevel.VaultAdmin)]
-		public WebhookConfigurationEditor WebhookConfiguration { get; set; }
-			= new WebhookConfigurationEditor();
+		[JsonConfEditor(Label = "Webhook configuration type")]
+		public WebhookConfigurationType WebhookConfigurationType { get; set; } = WebhookConfigurationType.Common;
+
+		[DataMember]
+		[Security(ChangeBy = SecurityAttribute.UserLevel.VaultAdmin, ViewBy = SecurityAttribute.UserLevel.VaultAdmin)]
+		[JsonConfEditor
+		(
+			Label = "Webhook configuration",
+			HelpText = "Configures webhooks (e.g. authentication)",
+			ShowWhen = ".parent._children{.key == 'WebhookConfigurationType' && .value != 'Individual' }"
+		)]
+		public WebhookConfiguration CommonWebhookConfiguration { get; set; }
+			= new WebhookConfiguration();
+
+		[DataMember]
+		[Security(ChangeBy = SecurityAttribute.UserLevel.VaultAdmin, ViewBy = SecurityAttribute.UserLevel.VaultAdmin)]
+		[JsonConfEditor
+		(
+			Label = "Webhook configuration",
+			HelpText = "Configures webhooks (e.g. authentication)",
+			ShowWhen = ".parent._children{.key == 'WebhookConfigurationType' && .value == 'Individual' }"
+		)]
+		public IndividualWebhookConfigurationEditor IndividualWebhookConfiguration { get; set; }
+			= new IndividualWebhookConfigurationEditor();
 
 		[DataMember(EmitDefaultValue = false)]
 		[JsonConfEditor

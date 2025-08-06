@@ -4,6 +4,8 @@ namespace MFiles.VAF.Extensions.Configuration
 {
 	public interface IConfigurationWithWebhookConfiguration
 	{
-		WebhookConfigurationEditor WebhookConfiguration { get; set; }
+		WebhookConfigurationType WebhookConfigurationType { get; set; }
+		WebhookConfiguration CommonWebhookConfiguration { get; set; }
+		IndividualWebhookConfigurationEditor IndividualWebhookConfiguration { get; set; }
 	}
 }

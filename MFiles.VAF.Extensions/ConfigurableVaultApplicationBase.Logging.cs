@@ -59,11 +59,12 @@ namespace MFiles.VAF.Extensions
 		/// Retriees the current logging configuration, if available.
 		/// </summary>
 		/// <returns>The current logging configuration, or null.</returns>
-		protected virtual WebhookConfigurationEditor GetWebhookConfiguration()
+		protected virtual IndividualWebhookConfigurationEditor GetIndividualWebhookConfiguration(TSecureConfiguration config = null)
 		{
-			if (this.Configuration is IConfigurationWithWebhookConfiguration configurationWithWebhook)
+			var c = config ?? this.Configuration;
+			if (c is IConfigurationWithWebhookConfiguration configurationWithWebhook)
 			{
-				return configurationWithWebhook?.WebhookConfiguration;
+				return configurationWithWebhook?.IndividualWebhookConfiguration;
 			}
 
 			return null;
@@ -93,38 +94,69 @@ namespace MFiles.VAF.Extensions
 			}
 
 			// Validate the webhook stuff.
-			var webhookConfiguration = this.GetWebhookConfiguration();
-			if(null == webhookConfiguration && WebhookConfigurationEditor.Instance.Any())
+			if(config is IConfigurationWithWebhookConfiguration webhookConfig
+				&& (this.Webhooks?.Any() ?? false))
 			{
-				// No config, but no webhooks.
-				yield return new ValidationFinding
-				(
-					ValidationFindingType.Warning, 
-					"WebhookConfiguration", 
-					"No webhook configuration was found, but webhooks are available.  Webhooks may not be able to be called."
-				);
-			}
-			if(null != webhookConfiguration)
-			{
-				foreach(var webhook in WebhookConfigurationEditor.Instance)
+				switch(webhookConfig.WebhookConfigurationType)
 				{
-					// If none whatsoever then return a warning.
-					if (!webhookConfiguration.TryGetWebhookAuthenticator(webhook.Key, out var authenticator))
-					{
-						yield return new ValidationFinding
-						(
-							ValidationFindingType.Warning,
-							"WebhookConfiguration",
-							$"No webhook configuration was found for webhook {webhook.Key}.  This webhook may not be able to be called."
-						);
-						continue;
-					}
+					// If we have common auth then check that.
+					case WebhookConfigurationType.Common:
+						{
+							var commonConfiguration = webhookConfig.CommonWebhookConfiguration;
+							if(null == commonConfiguration || null == commonConfiguration?.GetWebhookAuthenticator())
+							{
+								// No config, but no webhooks.
+								yield return new ValidationFinding
+								(
+									ValidationFindingType.Warning,
+									"WebhookConfiguration",
+									"No webhook configuration was found, but webhooks are available.  Webhooks may not be able to be called."
+								);
+							}
+						}
+						break;
 
-					// Allow each authenticator type to validate.
-					foreach (var finding in authenticator.CustomValidation(vault, webhook.Key))
-					{
-						yield return finding;
+					// Individual config is harder to validate.
+					case WebhookConfigurationType.Individual:
+						{
+							var individualWebhookConfiguration = this.GetIndividualWebhookConfiguration(config);
+							if (null == individualWebhookConfiguration)
+							{
+								// No config, but no webhooks.
+								yield return new ValidationFinding
+								(
+									ValidationFindingType.Warning,
+									"WebhookConfiguration",
+									"No webhook configuration was found, but webhooks are available.  Webhooks may not be able to be called."
+								);
+							}
+							if (null != individualWebhookConfiguration)
+							{
+								foreach (var webhook in this.Webhooks)
+								{
+									// If none whatsoever then return a warning.
+									if (!individualWebhookConfiguration.TryGetWebhookAuthenticator(webhook.WebhookName, out var authenticator))
+									{
+										yield return new ValidationFinding
+										(
+											ValidationFindingType.Warning,
+											"WebhookConfiguration",
+											$"No webhook configuration was found for webhook {webhook.WebhookName}.  This webhook may not be able to be called."
+										);
+										continue;
+									}
+
+									// Allow each authenticator type to validate.
+									foreach (var finding in authenticator.CustomValidation(vault, webhook.WebhookName))
+									{
+										yield return finding;
+									}
+								}
+							}
+							break;
 					}
+					default:
+						break;
 				}
 			}
 			

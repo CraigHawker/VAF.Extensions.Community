@@ -15,6 +15,13 @@ namespace MFiles.VAF.Extensions.Webhooks
 		string TaskQueueTaskType { get; set; }
     }
 
+	public static class WebhookHttpMethods
+	{
+		public const string GET = "GET";
+		public const string POST = "POST";
+
+	}
+
 	public interface IWebhook
 	{
 		bool Enabled { get; }

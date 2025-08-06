@@ -40,8 +40,7 @@ namespace MFiles.VAF.Extensions.Webhooks.Configuration
 				return;
 
 			// If we can parse the config then use it.
-			if(configuration is IConfigurationWithWebhookConfiguration c
-				&& null != c.WebhookConfiguration)
+			if(configuration is IConfigurationWithWebhookConfiguration c)
 			{
 				this.Logger?.Trace($"Parsing webhook configuration...");
 				foreach(var webhook in this.VaultApplication.Webhooks)
@@ -57,14 +56,40 @@ namespace MFiles.VAF.Extensions.Webhooks.Configuration
 						continue;
 					}
 
-					if (!c.WebhookConfiguration.ContainsKey(webhook.WebhookName))
+					// If we are using individual config then make sure we have one.
+					if (c.WebhookConfigurationType == WebhookConfigurationType.Individual 
+						&& !(c.IndividualWebhookConfiguration?.ContainsKey(webhook.WebhookName) ?? false))
 					{
 						this.Logger?.Warn($"Webhook with name {webhook.WebhookName} found, but configuration is not available.");
 						continue;
 					}
 
-					if(c.WebhookConfiguration.TryGetWebhookAuthenticator(webhook.WebhookName, out IWebhookAuthenticator authenticator)
-						&& null != authenticator)
+					// Get the authenticator.
+					IWebhookAuthenticator authenticator = null;
+					switch (c.WebhookConfigurationType)
+					{
+						case WebhookConfigurationType.Common:
+
+							// Use the common config.
+							authenticator = c.CommonWebhookConfiguration?.GetWebhookAuthenticator();
+							break;
+
+						case WebhookConfigurationType.Individual:
+
+							// Try to load the individual config.
+							c.IndividualWebhookConfiguration.TryGetWebhookAuthenticator(webhook.WebhookName, out authenticator);
+							continue;
+
+						default:
+							{
+								// Skip this one.
+								this.Logger?.Fatal($"Webhook configuration type {c.WebhookConfigurationType} not supported.");
+								continue;
+							}
+					}
+
+					// Check we got one and store it if we did.
+					if (null != authenticator)
 					{
 						this.Logger?.Info($"Webhook with name {webhook.WebhookName} found, configured via {authenticator.GetType().FullName}.");
 						this.Authenticators.Add(webhook.WebhookName, authenticator);

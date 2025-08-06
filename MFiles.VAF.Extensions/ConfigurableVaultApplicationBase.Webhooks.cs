@@ -129,12 +129,12 @@ namespace MFiles.VAF.Extensions
 					}
 					else
 					{
-						WebhookConfigurationEditor.Instance.Add(a.Name, authenticationAttribute.ConfigurationType);
+						IndividualWebhookConfigurationEditor.Instance.Add(a.Name, authenticationAttribute.ConfigurationType);
 					}
 				}
 				else
 				{
-					WebhookConfigurationEditor.Instance.Add(a.Name, typeof(WebhookConfiguration));
+					IndividualWebhookConfigurationEditor.Instance.Add(a.Name, typeof(WebhookConfiguration));
 				}
 				
 				return webhookMethodInfo;
